@@ -81,23 +81,39 @@
     }
 
     .button_red {
-        background-color: red;
+        background-color: rgb(255, 0, 0);
         border-radius: 100% 0 0 0;
     }
 
+    .button_red.light {
+        background-color: rgb(255, 121, 121);
+    }
+
     .button_blue {
-        background-color: blue;
+        background-color: rgb(0, 0, 255);
         border-radius: 0 100% 0 0;
     }
 
+    .button_blue.light {
+        background-color: rgb(133, 166, 255)
+    }
+
     .button_yellow {
-        background-color: yellow;
+        background-color: rgb(255, 238, 0);
         border-radius: 0 0 100% 0;
     }
 
+    .button_yellow.light {
+        background-color: rgb(250, 244, 157);
+    }
+
     .button_green {
-        background-color: green;
+        background-color: rgb(0, 128, 0);
         border-radius: 0 0 0 100%;
+    }
+
+    .button_green.light {
+        background-color: rgb(97, 209, 97);
     }
 
     /* Remove "focus" when is clicked */
@@ -164,33 +180,61 @@
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <script>
-    let button_start_game = document.getElementById('start_game_box');
-    let button_red = document.getElementById('button_red');
-    let button_blue = document.getElementById('button_blue');
-    let button_yellow = document.getElementById('button_yellow');
-    let button_green = document.getElementById('button_green');
+    const a = new AudioContext();
+    beep = function (vol, freq, duration) {
+        v = a.createOscillator()
+        u = a.createGain()
+        v.connect(u)
+        v.frequency.value = freq
+        v.type = "square"
+        u.connect(a.destination)
+        u.gain.value = vol * 0.01
+        v.start(a.currentTime)
+        v.stop(a.currentTime + duration * 0.001)
+    }
+    const fanfare = new Audio('fanfare.mp3');
+
+    const button_start_game = document.getElementById('start_game_box');
+    const button_red = document.getElementById('button_red');
+    const button_blue = document.getElementById('button_blue');
+    const button_yellow = document.getElementById('button_yellow');
+    const button_green = document.getElementById('button_green');
 
     // Sweat alert how to
-    // swal("Here's the title!", "...and here's the text!",'success');
 
     class SimonDiceGame {
         constructor(maxLevel, debug) {
             this.debug = debug;
-            this.startVariables(maxLevel);
+            this.maxLevel = maxLevel;
+            this.buttons = {
+                button_red,
+                button_blue,
+                button_yellow,
+                button_green
+            }
+            this.resolveLevel = this.resolveLevel.bind(this);
         }
 
-        startVariables(maxLevel) {
+        startVariables() {
             this.currentLevel = 0;
-            this.levels = new Array(maxLevel).fill(0).map(function () {
+            this.levels = new Array(this.maxLevel).fill(0).map(function () {
                 return Math.floor(Math.random() * 4);
             });
 
 
             if (this.debug) {
-                console.log('Current level: ' + this.currentLevel);
                 console.log('Levels prepared');
                 console.log(this.levels);
             }
+        }
+
+        startGame() {
+            this.startVariables();
+            if (this.debug) {
+                console.log('Starting Game!');
+            }
+            button_start_game.classList.add('hide');
+            setTimeout(() => this.showLevelColors(), 1000);
         }
 
         colorToNumber(color) {
@@ -199,7 +243,7 @@
                     return 0;
                 case 'blue':
                     return 1;
-                case 'red':
+                case 'yellow':
                     return 2;
                 case 'green':
                     return 3;
@@ -207,31 +251,118 @@
         }
 
         numberToColor(number) {
-            switch (color) {
+            switch (number) {
                 case 0:
-                    return 'red';
+                    return this.buttons.button_red;
                 case 1:
-                    return 'blue';
+                    return this.buttons.button_blue;
                 case 2:
-                    return 'red';
+                    return this.buttons.button_yellow;
                 case 3:
-                    return 'green';
+                    return this.buttons.button_green;
             }
         }
 
-        startGame() {
+        showLevelColors() {
+            this.sublevel = 0;
             if (this.debug) {
-                console.log('Starting Game!');
+                console.log('Current level: ' + this.currentLevel);
+            }
+            for (let i = 0; i <= this.currentLevel; i++) {
+                let currentColor = this.levels[i];
+
+                setTimeout(() => {
+                    if (this.debug) {
+                        console.log('currentColor => ' + currentColor + ' => ' + this.numberToColor(currentColor).dataset.color);
+                    }
+                    this.lightButton(currentColor)
+                }, i * 1000);
             }
 
-            button_start_game.classList.add('hide');
+            this.sublevel = 0;
+            setTimeout(() => this.enableButtons(), (this.currentLevel * 1000) + 400);
         }
+
+        lightButton(currentColor) {
+            let button = this.numberToColor(currentColor);
+            button.classList.add('light');
+            beep(100, (currentColor + 2) * 100, 100);
+            setTimeout(() => button.classList.remove('light'), 350);
+        }
+
+        resolveLevel(ev) {
+            let color = ev.target.dataset.color;
+            if (this.debug) {
+                console.log(color);
+            }
+            color = this.colorToNumber(color);
+            this.lightButton(color);
+
+            // FAiL
+            if (this.levels[this.sublevel] !== color) {
+                this.disableButtons();
+                beep(100, 40, 1000);
+                swal('Fail!', '¡You Wrong!', 'warning')
+                    .then(() => {
+                        button_start_game.classList.remove('hide');
+                    });
+                return false;
+            }
+
+            // You wins!
+            if (this.sublevel === (this.maxLevel - 1)) {
+                this.disableButtons();
+                swal('Winner!', '¡You wins!', 'success')
+                    .then(() => {
+                        button_start_game.classList.remove('hide');
+                    });
+                fanfare.volume = 1;
+                fanfare.play();
+                setTimeout(() => this.stopFanfare(), 4500);
+                return false;
+            }
+
+            // Next Level
+            if (this.sublevel === this.currentLevel) {
+                this.disableButtons();
+                this.currentLevel++;
+                setTimeout(() => this.showLevelColors(), 1000);
+            }
+            this.sublevel++;
+        }
+
+        stopFanfare() {
+            let musicSpeedLow = 40;
+            for (let i = 0; i <= musicSpeedLow; i++) {
+                let vol = (musicSpeedLow - i) / musicSpeedLow;
+                setTimeout(function () {
+                    console.log(vol);
+                    fanfare.volume = vol;
+                }, i * 100);
+            }
+        }
+
+
+        enableButtons() {
+            this.buttons.button_red.addEventListener('click', this.resolveLevel);
+            this.buttons.button_blue.addEventListener('click', this.resolveLevel);
+            this.buttons.button_yellow.addEventListener('click', this.resolveLevel);
+            this.buttons.button_green.addEventListener('click', this.resolveLevel);
+        }
+
+        disableButtons() {
+            this.buttons.button_red.removeEventListener('click', this.resolveLevel);
+            this.buttons.button_blue.removeEventListener('click', this.resolveLevel);
+            this.buttons.button_yellow.removeEventListener('click', this.resolveLevel);
+            this.buttons.button_green.removeEventListener('click', this.resolveLevel);
+        }
+
+
     }
 
-
-    button_start_game.addEventListener("click", function () {
-        const MAX_LEVEL = 30;
-        let game = new SimonDiceGame(MAX_LEVEL, true);
+    const MAX_LEVEL = 30;
+    let game = new SimonDiceGame(MAX_LEVEL, true);
+    button_start_game.addEventListener('click', function () {
         game.startGame();
     });
 
@@ -240,5 +371,7 @@
 
 
 </script>
+
+
 
 </html>
