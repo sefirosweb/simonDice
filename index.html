@@ -292,7 +292,7 @@
             }
 
             this.sublevel = 0;
-            setTimeout(() => this.enableButtons(), (this.currentLevel * speed) + 100);
+            setTimeout(() => this.enableButtons(), (this.currentLevel * speed) + 300);
         }
 
         lightButton(currentColor) {
@@ -338,9 +338,28 @@
             if (this.sublevel === this.currentLevel) {
                 this.disableButtons();
                 this.currentLevel++;
-                setTimeout(() => this.showLevelColors(), 1000);
+                setTimeout(() => this.showCorrect(), 200);
+                setTimeout(() => this.showLevelColors(), 1500);
+                return false;
             }
+
+            // Waiting next click;
             this.sublevel++;
+        }
+
+        showCorrect() {
+            let lightButton = this.levels[this.sublevel] + 1;
+    
+        
+            for (let i = 0; i < 4; i++) {
+
+                let colorButton = lightButton + i;
+                if (colorButton > 3) {
+                    colorButton -= 4;
+                }
+
+                setTimeout(() => this.lightButton(colorButton), i * 100);
+            }
         }
 
         stopFanfare() {
@@ -353,7 +372,6 @@
                 }, i * 100);
             }
         }
-
 
         enableButtons() {
             this.buttons.button_red.addEventListener('click', this.resolveLevel);
