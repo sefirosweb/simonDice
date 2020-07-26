@@ -263,11 +263,23 @@
             }
         }
 
+        getSpeedRate() {
+            let speedRate = (this.maxLevel - this.currentLevel) / this.maxLevel;
+            if (speedRate < 0.35) {
+                speedRate = 0.35;
+            }
+            return speedRate;
+        }
+
         showLevelColors() {
+            let speed = 600;
+            speed *= this.getSpeedRate();
             this.sublevel = 0;
             if (this.debug) {
                 console.log('Current level: ' + this.currentLevel);
+                console.log('Velocidad => ' + speed);
             }
+
             for (let i = 0; i <= this.currentLevel; i++) {
                 let currentColor = this.levels[i];
 
@@ -276,18 +288,18 @@
                         console.log('currentColor => ' + currentColor + ' => ' + this.numberToColor(currentColor).dataset.color);
                     }
                     this.lightButton(currentColor)
-                }, i * 1000);
+                }, i * speed);
             }
 
             this.sublevel = 0;
-            setTimeout(() => this.enableButtons(), (this.currentLevel * 1000) + 400);
+            setTimeout(() => this.enableButtons(), (this.currentLevel * speed) + 100);
         }
 
         lightButton(currentColor) {
             let button = this.numberToColor(currentColor);
             button.classList.add('light');
             beep(100, (currentColor + 2) * 100, 100);
-            setTimeout(() => button.classList.remove('light'), 350);
+            setTimeout(() => button.classList.remove('light'), (300 * this.getSpeedRate()));
         }
 
         resolveLevel(ev) {
@@ -356,19 +368,13 @@
             this.buttons.button_yellow.removeEventListener('click', this.resolveLevel);
             this.buttons.button_green.removeEventListener('click', this.resolveLevel);
         }
-
-
     }
 
-    const MAX_LEVEL = 30;
+    const MAX_LEVEL = 15;
     let game = new SimonDiceGame(MAX_LEVEL, true);
     button_start_game.addEventListener('click', function () {
         game.startGame();
     });
-
-
-
-
 
 </script>
 
