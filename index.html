@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Simon Dice Game!</title>
 </head>
 <style>
     * {
@@ -30,6 +30,22 @@
             'red blue'
             'green yellow';
         /* grid-gap: 10px; */
+    }
+
+    .start_game_box {
+        position: fixed;
+        background: white;
+        border: 5px solid black;
+        width: calc(45vh);
+        height: calc(45vh);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .start_game_box p {
+        font-size: 26px;
+        text-align: center;
     }
 
     .div_red {
@@ -98,7 +114,7 @@
     }
 
     /* Other method responsive mode */
-    
+
     /* @media screen and (max-width: 767px) {
         .container div button {
         width: calc(30vw);
@@ -117,26 +133,111 @@
         height: calc(50vw);
     }
      */
+
+
+    .hide {
+        display: none;
+    }
 </style>
 
 <body>
     <div class="container">
         <div class="div_red">
-            <button class="button_red"></button>
+            <button class="button_red" id="button_red" data-color="red"></button>
         </div>
         <div class="div_blue">
-            <button class="button_blue"></button>
+            <button class="button_blue" id="button_blue" data-color="blue"></button>
         </div>
         <div class="div_yellow">
-            <button class="button_yellow"></button>
+            <button class="button_yellow" id="button_yellow" data-color="yellow"></button>
         </div>
         <div class="div_green">
-            <button class="button_green"></button>
+            <button class="button_green" id="button_green" data-color="green"></button>
         </div>
     </div>
+
+    <div class="start_game_box" id="start_game_box">
+        <p>¡Start Game!</p>
+    </div>
 </body>
+<!-- Sweat alert -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <script>
+    let button_start_game = document.getElementById('start_game_box');
+    let button_red = document.getElementById('button_red');
+    let button_blue = document.getElementById('button_blue');
+    let button_yellow = document.getElementById('button_yellow');
+    let button_green = document.getElementById('button_green');
+
+    // Sweat alert how to
+    // swal("Here's the title!", "...and here's the text!",'success');
+
+    class SimonDiceGame {
+        constructor(maxLevel, debug) {
+            this.debug = debug;
+            this.startVariables(maxLevel);
+        }
+
+        startVariables(maxLevel) {
+            this.currentLevel = 0;
+            this.levels = new Array(maxLevel).fill(0).map(function () {
+                return Math.floor(Math.random() * 4);
+            });
+
+
+            if (this.debug) {
+                console.log('Current level: ' + this.currentLevel);
+                console.log('Levels prepared');
+                console.log(this.levels);
+            }
+        }
+
+        colorToNumber(color) {
+            switch (color) {
+                case 'red':
+                    return 0;
+                case 'blue':
+                    return 1;
+                case 'red':
+                    return 2;
+                case 'green':
+                    return 3;
+            }
+        }
+
+        numberToColor(number) {
+            switch (color) {
+                case 0:
+                    return 'red';
+                case 1:
+                    return 'blue';
+                case 2:
+                    return 'red';
+                case 3:
+                    return 'green';
+            }
+        }
+
+        startGame() {
+            if (this.debug) {
+                console.log('Starting Game!');
+            }
+
+            button_start_game.classList.add('hide');
+        }
+    }
+
+
+    button_start_game.addEventListener("click", function () {
+        const MAX_LEVEL = 30;
+        let game = new SimonDiceGame(MAX_LEVEL, true);
+        game.startGame();
+    });
+
+
+
+
 
 </script>
 
